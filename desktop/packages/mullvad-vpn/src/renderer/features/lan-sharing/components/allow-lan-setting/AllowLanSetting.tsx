@@ -41,8 +41,10 @@ export function AllowLanSetting(props: AllowLanSettingProps) {
                   <li>172.16.0.0/12</li>
                   <li>192.168.0.0/16</li>
                   <li>169.254.0.0/16</li>
+                  <li>100.64.0.0/10</li>
                   <li>fe80::/10</li>
                   <li>fc00::/7</li>
+                  <li>fd7a:115c:a1e0::/48</li>
                 </LanIpRanges>
               </ModalMessage>
             </InfoButton>

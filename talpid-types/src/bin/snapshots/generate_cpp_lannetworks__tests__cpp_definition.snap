@@ -12,6 +12,7 @@ static const wfp::IpNetwork g_ipv4LanNets[] = {
 	wfp::IpNetwork(wfp::IpAddress::Literal({ 172, 16, 0, 0 }), 12),
 	wfp::IpNetwork(wfp::IpAddress::Literal({ 192, 168, 0, 0 }), 16),
 	wfp::IpNetwork(wfp::IpAddress::Literal({ 169, 254, 0, 0 }), 16),
+	wfp::IpNetwork(wfp::IpAddress::Literal({ 100, 64, 0, 0 }), 10),
 };
 
 static const wfp::IpNetwork g_ipv6LanNets[] = {
@@ -31,4 +32,5 @@ static const wfp::IpNetwork g_ipv6MulticastNets[] = {
 	wfp::IpNetwork(wfp::IpAddress::Literal6({ 0xff03, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000 }), 16),
 	wfp::IpNetwork(wfp::IpAddress::Literal6({ 0xff04, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000 }), 16),
 	wfp::IpNetwork(wfp::IpAddress::Literal6({ 0xff05, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000 }), 16),
+	wfp::IpNetwork(wfp::IpAddress::Literal6({ 0xfd7a, 0x115c, 0xa1e0, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000 }), 48),
 };

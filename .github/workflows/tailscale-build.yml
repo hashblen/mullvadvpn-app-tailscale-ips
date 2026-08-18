@@ -1,0 +1,131 @@
+name: Mullvad Tailscale Build
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Every Monday at 04:00 UTC
+    - cron: "0 4 * * 1"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Enable Git long paths
+        run: |
+          git config --system core.longpaths true
+      
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          ref: tailscale-support
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Configure upstream
+        shell: bash
+        run: |
+          git remote remove upstream || true
+          git remote add upstream https://github.com/mullvad/mullvadvpn-app.git
+          git fetch upstream --tags --prune
+      
+      - name: Configure Git identity
+        shell: bash
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Find latest Mullvad release tag
+        id: version
+        shell: bash
+        run: |
+          VERSION=$(git tag --list \
+            | grep -E '^[0-9]+\.[0-9]+$' \
+            | sort -V \
+            | tail -n1)
+
+          if [ -z "$VERSION" ]; then
+            echo "No stable release tags found"
+            exit 1
+          fi
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Latest stable Mullvad tag: $VERSION"
+
+      - name: Check if release exists
+        id: check
+        shell: bash
+        run: |
+          if gh release view mullvad-tailscale-${{ steps.version.outputs.version }} >/dev/null 2>&1; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout Tailscale branch
+        if: steps.check.outputs.skip == 'false'
+        shell: bash
+        run: |
+          git checkout tailscale-support
+
+      - name: Rebase onto latest Mullvad release
+        if: steps.check.outputs.skip == 'false'
+        shell: bash
+        run: |
+          git rebase ${{ steps.version.outputs.version }} || {
+            echo "Rebase failed. Manual intervention required."
+            git rebase --abort
+            exit 1
+          }
+
+      - name: Setup Mullvad build environment
+        if: steps.check.outputs.skip == 'false'
+        uses: ./.github/actions/mullvad-build-env
+        with:
+          rust-cache-targets: true
+
+      - name: Build Mullvad
+        if: steps.check.outputs.skip == 'false'
+        shell: bash
+        run: |
+          ./build.sh --optimize
+          
+      - name: Find build outputs
+        if: steps.check.outputs.skip == 'false'
+        shell: bash
+        run: |
+          echo "Current directory:"
+          pwd
+      
+          echo "Top-level files:"
+          ls -la
+      
+          echo "Searching for executables:"
+          find . -type f \( -iname "*.exe" -o -iname "*.msi" -o -iname "*.zip" \) -print
+      
+          echo "Searching dist directories:"
+          find . -type d -name "dist" -print
+          
+      - name: Upload Windows executable
+        if: steps.check.outputs.skip == 'false'
+        uses: actions/upload-artifact@v4
+        with:
+          name: mullvad-tailscale-windows
+          path: |
+            dist/*.exe
+            
+      - name: Create GitHub Release
+        if: steps.check.outputs.skip == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: mullvad-tailscale-${{ steps.version.outputs.version }}
+          name: Mullvad Tailscale ${{ steps.version.outputs.version }}
+          files: |
+            dist/*.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

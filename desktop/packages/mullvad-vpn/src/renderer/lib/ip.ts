@@ -269,12 +269,14 @@ const IPV4_LAN_SUBNETS = [
   new IPv4Range([172, 16, 0, 0], 12),
   new IPv4Range([192, 168, 0, 0], 16),
   new IPv4Range([169, 254, 0, 0], 16),
+  new IPv4Range([100, 64, 0, 0], 10),
 ];
 
 // IPv6 addresses reserved for local networks
 const IPV6_LAN_SUBNETS = [
   new IPv6Range([0xfe80, 0, 0, 0, 0, 0, 0, 0], 10),
   new IPv6Range([0xfc00, 0, 0, 0, 0, 0, 0, 0], 7),
+  new IPv6Range([0xfd7a, 0x115c, 0xa1e0, 0, 0, 0, 0, 0], 48),
 ];
 
 const IPV4_LOOPBACK_SUBNET = new IPv4Range([127, 0, 0, 0], 8);
